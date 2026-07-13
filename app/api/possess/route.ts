@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import {
   generateFeedback,
-  hasAnthropic,
+  hasAI,
   type ImageInput,
   type ImageMediaType,
   type Intensity,
-} from "@/lib/anthropic";
+} from "@/lib/gemini";
 import { isPersonaKey } from "@/lib/personas";
 
 export const runtime = "nodejs";
@@ -17,11 +17,11 @@ const DATA_URL_RE = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]
 const MAX_IMAGE_B64 = 5_000_000; // ~3.7MB 원본 (Vercel 4.5MB 본문 한도 대비 여유)
 
 /**
- * AI 프록시 — 클라이언트가 직접 Anthropic을 부르지 않고 이 라우트가 대신 호출한다.
- * ANTHROPIC_API_KEY 는 서버 env 에만 존재. 실패 시 non-200 → 클라 seed 폴백.
+ * AI 프록시 — 클라이언트가 직접 Gemini를 부르지 않고 이 라우트가 대신 호출한다.
+ * GEMINI_API_KEY 는 서버 env 에만 존재. 실패 시 non-200 → 클라 seed 폴백.
  */
 export async function POST(req: Request) {
-  if (!hasAnthropic) {
+  if (!hasAI) {
     return NextResponse.json({ error: "not-configured" }, { status: 503 });
   }
 

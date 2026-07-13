@@ -1,15 +1,14 @@
-// 이 모듈은 app/api/possess/route.ts (서버)에서만 import된다. 키는 서버 env에만.
-import Anthropic from "@anthropic-ai/sdk";
+// 이 모듈은 app/api/possess/route.ts (서버)에서만 import된다. 키는 서버 env(GEMINI_API_KEY)에만.
+import { GoogleGenAI } from "@google/genai";
 import { PERSONA_MAP, type PersonaKey } from "./personas";
 import type { QAItem } from "./seed-content";
 
-// 승인된 계획: 품질/속도/비용 균형 + 한국어 유머 품질 → Sonnet 5.
-const MODEL = "claude-sonnet-5";
+// Google Gemini — 무료 티어(카드 등록 불필요). aistudio.google.com/apikey 에서 발급.
+const MODEL = "gemini-3.5-flash";
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
-const client = apiKey ? new Anthropic({ apiKey }) : null;
+const client = process.env.GEMINI_API_KEY ? new GoogleGenAI({}) : null;
 
-export const hasAnthropic = Boolean(client);
+export const hasAI = Boolean(client);
 
 export type Intensity = "mild" | "normal" | "spicy";
 
@@ -56,76 +55,84 @@ function systemPrompt(intensity: Intensity): string {
 
 [강도 지침] ${INTENSITY_RULES[intensity]}
 
-모든 문장은 반드시 자연스러운 한국어로.`;
+모든 문장은 반드시 자연스러운 한국어로. 출력은 반드시 JSON 스키마를 따를 것.`;
 }
 
-const FEEDBACK_TOOL: Anthropic.Tool = {
-  name: "return_feedback",
-  description: "생성한 광고주 공격과 그에 대한 AE 방어 논리 쌍 목록을 반환한다.",
-  strict: true,
-  input_schema: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
+const FEEDBACK_SCHEMA = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
+      description: "공격+방어 쌍 3~5개",
       items: {
-        type: "array",
-        description: "공격+방어 쌍 3~5개",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            attack: {
-              type: "string",
-              description: "광고주의 공격/피드백 대사 (한 문장, 구어체)",
-            },
-            defense: {
-              type: "string",
-              description: "AE의 방어 논리 (담백, 근거 중심, 2~3문장)",
-            },
+        type: "object",
+        properties: {
+          attack: {
+            type: "string",
+            description: "광고주의 공격/피드백 대사 (한 문장, 구어체)",
           },
-          required: ["attack", "defense"],
+          defense: {
+            type: "string",
+            description: "AE의 방어 논리 (담백, 근거 중심, 2~3문장)",
+          },
         },
+        required: ["attack", "defense"],
       },
     },
-    required: ["items"],
   },
+  required: ["items"],
 };
+
+type InteractionInputPart =
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mime_type: ImageMediaType };
 
 export async function generateFeedback(
   params: FeedbackParams,
 ): Promise<QAItem[]> {
-  if (!client) throw new Error("anthropic-not-configured");
+  if (!client) throw new Error("ai-not-configured");
   const { persona, input, copy, image, intensity = "normal" } = params;
   const p = PERSONA_MAP[persona];
 
-  const parts: string[] = [`페르소나: ${p.label} — ${p.personaPrompt}`];
-  if (input) parts.push(`시안/기획 한 줄: ${input}`);
-  if (copy) parts.push(`실제 광고 카피:\n${copy}`);
-  if (image) parts.push("첨부된 시안 이미지도 함께 보고, 이미지 속 요소를 구체적으로 지적할 것.");
+  const textParts: string[] = [`페르소나: ${p.label} — ${p.personaPrompt}`];
+  if (input) textParts.push(`시안/기획 한 줄: ${input}`);
+  if (copy) textParts.push(`실제 광고 카피:\n${copy}`);
+  if (image)
+    textParts.push(
+      "첨부된 시안 이미지도 함께 보고, 이미지 속 요소를 구체적으로 지적할 것.",
+    );
 
-  const userContent: Anthropic.ContentBlockParam[] = [];
+  const inputParts: InteractionInputPart[] = [];
   if (image) {
-    userContent.push({
+    inputParts.push({
       type: "image",
-      source: { type: "base64", media_type: image.media_type, data: image.data },
+      data: image.data,
+      mime_type: image.media_type,
     });
   }
-  userContent.push({ type: "text", text: parts.join("\n\n") });
+  inputParts.push({ type: "text", text: textParts.join("\n\n") });
 
-  const res = await client.messages.create({
+  const interaction = await client.interactions.create({
     model: MODEL,
-    max_tokens: 3000,
-    thinking: { type: "disabled" }, // 강제 tool_choice와 호환 위해 off. 강도는 프롬프트로 조절.
-    system: systemPrompt(intensity),
-    tools: [FEEDBACK_TOOL],
-    tool_choice: { type: "tool", name: "return_feedback" },
-    messages: [{ role: "user", content: userContent }],
+    input: inputParts,
+    system_instruction: systemPrompt(intensity),
+    response_format: {
+      type: "text",
+      mime_type: "application/json",
+      schema: FEEDBACK_SCHEMA,
+    },
   });
 
-  const block = res.content.find((b) => b.type === "tool_use");
-  if (!block || block.type !== "tool_use") throw new Error("no-tool-use");
+  const raw = interaction.output_text;
+  if (!raw) throw new Error("empty-output");
 
-  const data = block.input as { items?: QAItem[] };
+  let data: { items?: QAItem[] };
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error("invalid-json");
+  }
+
   const items = (data.items ?? []).filter(
     (it) =>
       it &&
