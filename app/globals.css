@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── INNOCEAN 디자인 토큰 ─────────────────────────────
+   강조는 라임(#C7F03A) 하나만. 네이비/잉크는 뉴트럴. */
+@theme {
+  --color-lime: #c7f03a;
+  --color-limedeep: #93b814;
+  --color-ink: #0e0e0c;
+  --color-paper: #f4f2ea;
+  --color-navy: #191c46;
+  --color-ash: #2a2b30;
+
+  --font-sans: var(--font-noto), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  --animate-pop: pop 0.42s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  --animate-fadeup: fadeup 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes fadeup {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-2deg);
+  }
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
   }
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* 브루탈리스트 하드 섀도우 */
+.hard-shadow {
+  box-shadow: 6px 6px 0 0 var(--color-ink);
+}
+.hard-shadow-lime {
+  box-shadow: 6px 6px 0 0 var(--color-lime);
+}
+.hard-shadow-sm {
+  box-shadow: 4px 4px 0 0 rgba(14, 14, 12, 0.9);
+}
+
+/* 타이핑 캐럿 */
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.06em;
+  height: 1.05em;
+  margin-left: 0.04em;
+  background: var(--color-lime);
+  transform: translateY(0.14em);
+  animation: blink 1s step-end infinite;
+}
+
+.animate-pop {
+  animation: var(--animate-pop);
+}
+.animate-fadeup {
+  animation: var(--animate-fadeup);
+}
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+/* 헤드라인: 브루탈리스트 타이트 트래킹 */
+.display {
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+
+/* 스크롤바 (다크) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ash);
+  border-radius: 999px;
+}
+::selection {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-fadeup,
+  .floaty,
+  .caret::after {
+    animation: none !important;
+  }
 }

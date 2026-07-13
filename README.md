@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 광고주 빙의 시뮬레이터
 
-## Getting Started
+이노션 바이브코딩 대회 출품작. **AI가 우리 광고주로 빙의해 내 시안을 두들겨 패고, 방어 논리까지 짜주는** 시뮬레이터.
 
-First, run the development server:
+- 로드 즉시 예시 자동 재생 (5초 훅) — 아무도 타이핑 안 해도 굴러감
+- 원루프 4단계: 입력 → 빙의 공격 → 방어 논리 → 명예의전당(공유·누적)
+- 광고주 페르소나 4종 (전부 가상 아키타입, 실명·실브랜드 없음)
+- 로그인 없음 / 모바일 대응 / API 키 서버 은닉
 
+## 스택
+- Next.js 15 (App Router) + TypeScript + Tailwind v4
+- AI: Anthropic Claude (`claude-sonnet-5`) — **API 라우트(`/api/possess`)가 프록시**해 키를 서버에 숨김
+- DB: Supabase (`hall_of_fame` 테이블) — 명예의전당 누적·공유 + 좋아요
+- 배포: Vercel
+- OG 썸네일: `next/og` 로 동적 생성 (카드별 공격 문구가 그대로 썸네일)
+
+## 로컬 실행
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # 값 채우기 (아래 참고)
+npm run dev                          # http://localhost:3000
 ```
+> 키가 없어도 앱은 동작합니다. AI는 seed 폴백 콘텐츠로, 명예의전당은 seed 피드로 graceful degrade.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 배포 준비 (사용자 직접 스텝)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1) Supabase
+1. https://supabase.com 에서 프로젝트 생성 (무료).
+2. SQL Editor 에 [`supabase/schema.sql`](supabase/schema.sql) 전체를 붙여넣고 실행.
+   - `hall_of_fame` 테이블 + RLS(익명 select/insert) + `increment_like` RPC + 시드 10건 생성.
+3. Project Settings → API 에서 **Project URL** 과 **anon public key** 복사 → env 에 입력.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2) Anthropic 키
+- https://console.anthropic.com → API Keys 에서 발급 → `ANTHROPIC_API_KEY` 에 입력.
 
-## Learn More
+### 3) Vercel 배포
+1. 이 폴더를 GitHub 레포로 push (또는 `vercel` CLI 로 직접 배포).
+2. Vercel 에서 New Project → 레포 임포트.
+3. **Environment Variables** 에 등록:
+   - `ANTHROPIC_API_KEY` (서버 전용)
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - (선택) `NEXT_PUBLIC_SITE_URL` = 배포된 프로덕션 URL
+4. Deploy → 생성된 프로덕션 URL 을 대회에 제출. ([`SUBMISSION.md`](SUBMISSION.md) 의 카피 5칸과 함께)
 
-To learn more about Next.js, take a look at the following resources:
+## 환경 변수
+| 변수 | 용도 | 노출 |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Claude 호출 (공격/방어 생성) | 서버 전용 |
+| `NEXT_PUBLIC_SUPABASE_URL` | 명예의전당 DB | 클라 (anon) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 명예의전당 DB (RLS 보호) | 클라 (anon) |
+| `NEXT_PUBLIC_SITE_URL` | OG 썸네일 절대경로 | 클라 |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 구조
+```
+app/
+  page.tsx              메인 원루프 (랜딩→입력→결과)
+  hall/page.tsx         명예의전당 피드
+  card/[id]/            박제 카드 퍼머링크 + 카드별 OG 이미지
+  opengraph-image.tsx   기본 OG 썸네일(키비주얼)
+  api/possess/route.ts  AI 프록시 (키 은닉)
+components/             HeroDemo · PersonaPicker · InputPanel · AttackDefense · HallCard · Bubbles · MockBanner
+lib/                    personas · seed-content · anthropic(서버) · supabase · hall · og
+supabase/schema.sql     DB 스키마 (한 번 실행)
+```
