@@ -116,6 +116,9 @@ export async function generateFeedback(
     model: MODEL,
     input: inputParts,
     system_instruction: systemPrompt(intensity),
+    // gemini-3.5-flash 는 기본 thinking 이 과해 서버리스 타임아웃(504) 유발 →
+    // minimal 로 낮춰 응답 속도 확보. 강도는 프롬프트로 제어하므로 품질 영향 최소.
+    generation_config: { thinking_level: "minimal" },
     response_format: {
       type: "text",
       mime_type: "application/json",
