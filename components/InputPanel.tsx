@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
 import PersonaPicker from "./PersonaPicker";
 import type { PersonaKey } from "@/lib/personas";
+import type { Intensity } from "@/lib/possess-client";
 
 const EXAMPLES = [
   "여름 세일 배너 (메인 레드)",
@@ -11,9 +13,51 @@ const EXAMPLES = [
   "생수 브랜드 리브랜딩",
 ];
 
+const LEVELS: { key: Intensity; label: string; emoji: string; desc: string }[] = [
+  { key: "mild", label: "순한맛", emoji: "🥛", desc: "부드럽게" },
+  { key: "normal", label: "보통", emoji: "🙂", desc: "현실적으로" },
+  { key: "spicy", label: "매운맛", emoji: "🌶️", desc: "집요하게" },
+];
+
+// 브라우저에서 이미지를 긴 변 기준 축소 + jpeg 인코딩 → 전송 용량·비전 비용 절감
+function downscaleToDataUrl(file: File, maxDim = 1600, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("no-canvas"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("img-load-failed"));
+    };
+    img.src = url;
+  });
+}
+
 export default function InputPanel({
   input,
   setInput,
+  copy,
+  setCopy,
+  image,
+  setImage,
+  intensity,
+  setIntensity,
   persona,
   setPersona,
   onSubmit,
@@ -21,16 +65,39 @@ export default function InputPanel({
 }: {
   input: string;
   setInput: (v: string) => void;
+  copy: string;
+  setCopy: (v: string) => void;
+  image: string | null;
+  setImage: (v: string | null) => void;
+  intensity: Intensity;
+  setIntensity: (v: Intensity) => void;
   persona: PersonaKey | null;
   setPersona: (k: PersonaKey) => void;
   onSubmit: () => void;
   loading: boolean;
 }) {
-  const ready = input.trim().length > 0 && !!persona && !loading;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [imgBusy, setImgBusy] = useState(false);
+  const hasContent = input.trim().length > 0 || copy.trim().length > 0 || !!image;
+  const ready = hasContent && !!persona && !loading;
+
+  async function onFile(file: File | undefined) {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImgBusy(true);
+    try {
+      setImage(await downscaleToDataUrl(file));
+    } catch {
+      /* 무시 */
+    } finally {
+      setImgBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-2xl">
       <div className="rounded-3xl border border-white/10 bg-ash/40 p-5 shadow-2xl shadow-black/50 sm:p-7">
+        {/* 1. 시안/기획 */}
         <label className="mb-2 block text-sm font-bold text-paper/70">
           1. 어떤 시안·기획이에요?
         </label>
@@ -57,8 +124,91 @@ export default function InputPanel({
           ))}
         </div>
 
+        {/* 2. 실제 카피 (선택) */}
         <label className="mb-2 mt-6 block text-sm font-bold text-paper/70">
-          2. 어떤 광고주로 빙의시킬까요?
+          2. 실제 카피 넣기{" "}
+          <span className="font-normal text-paper/40">(선택 · 실제 광고 문구를 붙여넣으면 그걸 물고 늘어져요)</span>
+        </label>
+        <textarea
+          value={copy}
+          onChange={(e) => setCopy(e.target.value)}
+          maxLength={1000}
+          rows={3}
+          placeholder={"예)\n메인카피: 이번 여름, 가장 시원한 선택\n서브: 최대 50% 할인"}
+          className="w-full resize-y rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-paper outline-none placeholder:text-paper/25 focus:border-lime"
+        />
+
+        {/* 3. 이미지 시안 (선택) */}
+        <label className="mb-2 mt-6 block text-sm font-bold text-paper/70">
+          3. 시안 이미지 올리기{" "}
+          <span className="font-normal text-paper/40">(선택 · AI가 그림을 직접 보고 지적)</span>
+        </label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => onFile(e.target.files?.[0])}
+        />
+        {image ? (
+          <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/30 p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt="업로드한 시안"
+              className="h-20 w-20 rounded-lg object-cover"
+            />
+            <div className="flex-1 text-sm text-paper/60">시안 이미지 첨부됨</div>
+            <button
+              type="button"
+              onClick={() => setImage(null)}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-bold text-paper/70 hover:border-red-400/60 hover:text-red-300"
+            >
+              제거 ✕
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={imgBusy}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-black/20 px-4 py-4 text-sm text-paper/60 transition-colors hover:border-lime/50 hover:text-lime disabled:opacity-50"
+          >
+            {imgBusy ? "이미지 처리 중…" : "📎 이미지 선택 (PNG/JPG)"}
+          </button>
+        )}
+
+        {/* 4. 강도 */}
+        <label className="mb-2 mt-6 block text-sm font-bold text-paper/70">
+          4. 얼마나 빡세게?
+        </label>
+        <div className="grid grid-cols-3 gap-2">
+          {LEVELS.map((lv) => {
+            const active = intensity === lv.key;
+            return (
+              <button
+                key={lv.key}
+                type="button"
+                onClick={() => setIntensity(lv.key)}
+                className={`flex flex-col items-center gap-0.5 rounded-xl border py-2.5 transition-all ${
+                  active
+                    ? "border-lime bg-lime/15 ring-2 ring-lime"
+                    : "border-white/12 bg-white/5 hover:border-white/30"
+                }`}
+              >
+                <span className="text-lg">{lv.emoji}</span>
+                <span className={`text-sm font-extrabold ${active ? "text-lime" : "text-paper"}`}>
+                  {lv.label}
+                </span>
+                <span className="text-[10px] text-paper/50">{lv.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 5. 페르소나 */}
+        <label className="mb-2 mt-6 block text-sm font-bold text-paper/70">
+          5. 어떤 광고주로 빙의시킬까요?
         </label>
         <PersonaPicker value={persona} onChange={setPersona} />
 

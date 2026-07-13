@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import HeroDemo from "./HeroDemo";
 import InputPanel from "./InputPanel";
 import AttackDefense from "./AttackDefense";
-import { generatePossession } from "@/lib/possess-client";
+import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
 import type { PersonaKey } from "@/lib/personas";
 import type { QAItem } from "@/lib/seed-content";
@@ -16,9 +16,22 @@ export default function Experience() {
   const router = useRouter();
   const [view, setView] = useState<View>("landing");
   const [input, setInput] = useState("");
+  const [copy, setCopy] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [intensity, setIntensity] = useState<Intensity>("normal");
   const [persona, setPersona] = useState<PersonaKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<QAItem[]>([]);
+
+  const hasContent = input.trim().length > 0 || copy.trim().length > 0 || !!image;
+
+  function summaryLabel(): string {
+    return (
+      input.trim() ||
+      copy.trim().slice(0, 60) ||
+      (image ? "이미지 시안" : "내 시안")
+    );
+  }
 
   function toTop() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
@@ -30,9 +43,15 @@ export default function Experience() {
   }
 
   async function submit() {
-    if (!persona || !input.trim() || loading) return;
+    if (!persona || !hasContent || loading) return;
     setLoading(true);
-    const result = await generatePossession(persona, input.trim());
+    const result = await generatePossession({
+      persona,
+      input: input.trim(),
+      copy: copy.trim(),
+      image,
+      intensity,
+    });
     setItems(result.items);
     setLoading(false);
     setView("result");
@@ -45,7 +64,7 @@ export default function Experience() {
       await enshrineAttack({
         persona,
         attack_text: item.attack,
-        input_summary: input.trim(),
+        input_summary: summaryLabel(),
       });
       return true;
     } catch {
@@ -64,6 +83,12 @@ export default function Experience() {
         <InputPanel
           input={input}
           setInput={setInput}
+          copy={copy}
+          setCopy={setCopy}
+          image={image}
+          setImage={setImage}
+          intensity={intensity}
+          setIntensity={setIntensity}
           persona={persona}
           setPersona={setPersona}
           onSubmit={submit}
@@ -87,7 +112,7 @@ export default function Experience() {
         <AttackDefense
           items={items}
           persona={persona!}
-          input={input.trim()}
+          input={summaryLabel()}
           onEnshrine={handleEnshrine}
           onRestart={goInput}
           onOpenHall={() => router.push("/hall")}
