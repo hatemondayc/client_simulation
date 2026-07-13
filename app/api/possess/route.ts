@@ -84,6 +84,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ items });
   } catch (e) {
     console.error("[/api/possess] generation failed:", e);
-    return NextResponse.json({ error: "generation-failed" }, { status: 502 });
+    return NextResponse.json(
+      {
+        error: "generation-failed",
+        detail: e instanceof Error ? e.message : String(e),
+      },
+      { status: 502 },
+    );
   }
 }

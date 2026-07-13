@@ -1,14 +1,13 @@
 // 이 모듈은 app/api/possess/route.ts (서버)에서만 import된다. 키는 서버 env(GEMINI_API_KEY)에만.
-import { GoogleGenAI } from "@google/genai";
+// @google/genai SDK가 이 환경에서 hang/불안정 → 검증된 REST 엔드포인트를 raw fetch로 직접 호출.
 import { PERSONA_MAP, type PersonaKey } from "./personas";
 import type { QAItem } from "./seed-content";
 
-// Google Gemini — 무료 티어(카드 등록 불필요). aistudio.google.com/apikey 에서 발급.
 const MODEL = "gemini-3.5-flash";
+const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
-const client = process.env.GEMINI_API_KEY ? new GoogleGenAI({}) : null;
-
-export const hasAI = Boolean(client);
+const apiKey = process.env.GEMINI_API_KEY;
+export const hasAI = Boolean(apiKey);
 
 export type Intensity = "mild" | "normal" | "spicy";
 
@@ -55,42 +54,20 @@ function systemPrompt(intensity: Intensity): string {
 
 [강도 지침] ${INTENSITY_RULES[intensity]}
 
-모든 문장은 반드시 자연스러운 한국어로. 출력은 반드시 JSON 스키마를 따를 것.`;
+모든 문장은 반드시 자연스러운 한국어로.
+출력은 반드시 아래 형식의 JSON 하나만. 다른 텍스트 절대 금지:
+{"items":[{"attack":"광고주 공격 대사","defense":"AE 방어 논리"}, ...]}`;
 }
 
-const FEEDBACK_SCHEMA = {
-  type: "object",
-  properties: {
-    items: {
-      type: "array",
-      description: "공격+방어 쌍 3~5개",
-      items: {
-        type: "object",
-        properties: {
-          attack: {
-            type: "string",
-            description: "광고주의 공격/피드백 대사 (한 문장, 구어체)",
-          },
-          defense: {
-            type: "string",
-            description: "AE의 방어 논리 (담백, 근거 중심, 2~3문장)",
-          },
-        },
-        required: ["attack", "defense"],
-      },
-    },
-  },
-  required: ["items"],
-};
-
-type InteractionInputPart =
-  | { type: "text"; text: string }
-  | { type: "image"; data: string; mime_type: ImageMediaType };
+interface GeminiPart {
+  text?: string;
+  inlineData?: { mimeType: string; data: string };
+}
 
 export async function generateFeedback(
   params: FeedbackParams,
 ): Promise<QAItem[]> {
-  if (!client) throw new Error("ai-not-configured");
+  if (!apiKey) throw new Error("ai-not-configured");
   const { persona, input, copy, image, intensity = "normal" } = params;
   const p = PERSONA_MAP[persona];
 
@@ -102,41 +79,62 @@ export async function generateFeedback(
       "첨부된 시안 이미지도 함께 보고, 이미지 속 요소를 구체적으로 지적할 것.",
     );
 
-  const inputParts: InteractionInputPart[] = [];
+  const parts: GeminiPart[] = [];
   if (image) {
-    inputParts.push({
-      type: "image",
-      data: image.data,
-      mime_type: image.media_type,
-    });
+    parts.push({ inlineData: { mimeType: image.media_type, data: image.data } });
   }
-  inputParts.push({ type: "text", text: textParts.join("\n\n") });
+  parts.push({ text: textParts.join("\n\n") });
 
-  const interaction = await client.interactions.create({
-    model: MODEL,
-    input: inputParts,
-    system_instruction: systemPrompt(intensity),
-    // gemini-3.5-flash 는 기본 thinking 이 과해 서버리스 타임아웃(504) 유발 →
-    // minimal 로 낮춰 응답 속도 확보. 강도는 프롬프트로 제어하므로 품질 영향 최소.
-    generation_config: { thinking_level: "minimal" },
-    response_format: {
-      type: "text",
-      mime_type: "application/json",
-      schema: FEEDBACK_SCHEMA,
+  const body = {
+    systemInstruction: { parts: [{ text: systemPrompt(intensity) }] },
+    contents: [{ role: "user", parts }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      thinkingConfig: { thinkingLevel: "MINIMAL" }, // 사고량 축소 → 응답 속도 확보
+      temperature: 1.1,
+      maxOutputTokens: 2048,
     },
-  });
+  };
 
-  const raw = interaction.output_text;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 50000);
+  let res: Response;
+  try {
+    res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`gemini ${res.status}: ${errText.slice(0, 300)}`);
+  }
+
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
+  };
+  const raw = (data.candidates?.[0]?.content?.parts ?? [])
+    .map((pt) => pt.text ?? "")
+    .join("")
+    .trim();
   if (!raw) throw new Error("empty-output");
 
-  let data: { items?: QAItem[] };
+  let parsed: { items?: QAItem[] };
   try {
-    data = JSON.parse(raw);
+    parsed = JSON.parse(raw);
   } catch {
     throw new Error("invalid-json");
   }
 
-  const items = (data.items ?? []).filter(
+  const items = (parsed.items ?? []).filter(
     (it) =>
       it &&
       typeof it.attack === "string" &&
