@@ -162,9 +162,7 @@ export default function Experience() {
               →
             </span>
           </button>
-          <p className="text-xs text-paper/40">
-            로그인 없음 · 실명·실브랜드 없음 · 5초면 충분
-          </p>
+          <p className="text-xs text-paper/40">5초면 충분</p>
         </div>
       </div>
     </section>

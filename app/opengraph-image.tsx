@@ -5,7 +5,7 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = "광고주 빙의 시뮬레이터 — AI가 당신 광고주로 빙의합니다";
 
-const KICKER = "이노션 바이브코딩 출품작";
+const KICKER = "보고 전, 미리 당해보기";
 const LINE1 = "AI가 당신 광고주로";
 const LIME = "빙의";
 const LINE2_REST = "합니다";

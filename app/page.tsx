@@ -31,7 +31,12 @@ export default function Home() {
           AE·제작·PM·미디어 다 겪는 그 순간, 보고 들어가기 전에 광고주한테
           미리 한번 당해보는 툴이에요. 나오는 광고주는 전부 가상 인물입니다.
         </p>
-        <p className="mt-1">이노션 바이브코딩 · 광고주 빙의 시뮬레이터</p>
+        <p className="mt-3 text-paper/30">
+          AI 응답은 Groq · Llama 4 Scout로 생성됩니다
+        </p>
+        <p className="mt-1 text-paper/20">
+          디지털이니셔티브팀 오원기 시니어매니저 제작
+        </p>
       </footer>
     </>
   );
