@@ -1,12 +1,13 @@
-// 이 모듈은 app/api/possess/route.ts (서버)에서만 import된다. 키는 서버 env(GEMINI_API_KEY)에만.
-// @google/genai SDK가 이 환경에서 hang/불안정 → 검증된 REST 엔드포인트를 raw fetch로 직접 호출.
+// 이 모듈은 app/api/possess/route.ts (서버)에서만 import된다. 키는 서버 env(GROQ_API_KEY)에만.
+// Groq(무료 티어 1,000건/일)의 OpenAI 호환 Chat Completions 를 raw fetch로 호출.
 import { PERSONA_MAP, type PersonaKey } from "./personas";
 import type { QAItem } from "./seed-content";
 
-const MODEL = "gemini-3.5-flash";
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+// Llama 4 Scout = 멀티모달(텍스트+이미지) + 빠름(~1.3s). 텍스트/비전 단일 모델로 사용.
+const MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GROQ_API_KEY;
 export const hasAI = Boolean(apiKey);
 
 export type Intensity = "mild" | "normal" | "spicy";
@@ -43,7 +44,8 @@ function systemPrompt(intensity: Intensity): string {
 
 [1] 광고주 빙의
 - 주어진 페르소나 성격 그대로, 대행사가 가져온 시안/기획/카피(이미지가 있으면 그 이미지까지)에 현실에서 진짜 나올 법한 공격/피드백을 만든다.
-- 이미지가 주어지면 반드시 그 이미지의 실제 요소(색·레이아웃·카피·여백·로고·서체 등)를 구체적으로 물고 늘어져라. 두루뭉술 금지.
+- 페르소나 말투와 성격을 생생하게 살려라. 두루뭉술한 일반론 금지 — 그 페르소나만의 대사여야 한다.
+- 이미지가 주어지면 반드시 그 이미지의 실제 요소(색·레이아웃·카피·여백·로고·서체 등)를 구체적으로 물고 늘어져라.
 - 광고업계 사람이 보면 "아 우리 광고주 딱 이래" 하고 웃픈 수준의 리얼함.
 - 각 공격은 한 문장, 실제 대사체(구어체).
 - 실존 브랜드·회사·인물 실명은 절대 금지. 필요하면 "요즘 그 핫한 브랜드"처럼 익명 표현.
@@ -51,18 +53,21 @@ function systemPrompt(intensity: Intensity): string {
 [2] 베테랑 AE 방어
 - 각 공격에 대해, 광고주와 관계 안 깨지면서 시안을 지키는 방어 논리를 만든다.
 - 실무에서 바로 쓸 수 있는 담백한 톤. 감정 호소 말고 구조·근거 중심. 각 방어는 2~3문장.
+- 방어 첫 문장을 매번 "이해합니다"·"알겠습니다" 같은 똑같은 말로 시작하지 말고, 바로 근거로 들어가거나 다양하게 열어라.
 
 [강도 지침] ${INTENSITY_RULES[intensity]}
 
 모든 문장은 반드시 자연스러운 한국어로.
 출력은 반드시 아래 형식의 JSON 하나만. 다른 텍스트 절대 금지:
-{"items":[{"attack":"광고주 공격 대사","defense":"AE 방어 논리"}, ...]}`;
+{"items":[{"attack":"광고주 공격 대사","defense":"AE 방어 논리"}]}`;
 }
 
-interface GeminiPart {
-  text?: string;
-  inlineData?: { mimeType: string; data: string };
-}
+type UserContent =
+  | string
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
 
 export async function generateFeedback(
   params: FeedbackParams,
@@ -78,33 +83,38 @@ export async function generateFeedback(
     textParts.push(
       "첨부된 시안 이미지도 함께 보고, 이미지 속 요소를 구체적으로 지적할 것.",
     );
+  const text = textParts.join("\n\n");
 
-  const parts: GeminiPart[] = [];
-  if (image) {
-    parts.push({ inlineData: { mimeType: image.media_type, data: image.data } });
-  }
-  parts.push({ text: textParts.join("\n\n") });
+  const userContent: UserContent = image
+    ? [
+        { type: "text", text },
+        {
+          type: "image_url",
+          image_url: { url: `data:${image.media_type};base64,${image.data}` },
+        },
+      ]
+    : text;
 
   const body = {
-    systemInstruction: { parts: [{ text: systemPrompt(intensity) }] },
-    contents: [{ role: "user", parts }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      thinkingConfig: { thinkingLevel: "MINIMAL" }, // 사고량 축소 → 응답 속도 확보
-      temperature: 1.1,
-      maxOutputTokens: 2048,
-    },
+    model: MODEL,
+    messages: [
+      { role: "system", content: systemPrompt(intensity) },
+      { role: "user", content: userContent },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 1.1,
+    max_tokens: 2048,
   };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 50000);
+  const timer = setTimeout(() => controller.abort(), 45000);
   let res: Response;
   try {
     res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-goog-api-key": apiKey,
+        authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
       signal: controller.signal,
@@ -115,16 +125,13 @@ export async function generateFeedback(
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`gemini ${res.status}: ${errText.slice(0, 300)}`);
+    throw new Error(`groq ${res.status}: ${errText.slice(0, 300)}`);
   }
 
   const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: GeminiPart[] } }>;
+    choices?: Array<{ message?: { content?: string } }>;
   };
-  const raw = (data.candidates?.[0]?.content?.parts ?? [])
-    .map((pt) => pt.text ?? "")
-    .join("")
-    .trim();
+  const raw = (data.choices?.[0]?.message?.content ?? "").trim();
   if (!raw) throw new Error("empty-output");
 
   let parsed: { items?: QAItem[] };

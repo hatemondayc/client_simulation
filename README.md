@@ -9,7 +9,7 @@
 
 ## 스택
 - Next.js 15 (App Router) + TypeScript + Tailwind v4
-- AI: Google Gemini (`gemini-3.5-flash`, 무료 티어) — **API 라우트(`/api/possess`)가 프록시**해 키를 서버에 숨김
+- AI: Groq (`meta-llama/llama-4-scout`, 무료 티어 1,000건/일, 멀티모달) — **API 라우트(`/api/possess`)가 프록시**해 키를 서버에 숨김
 - DB: Supabase (`hall_of_fame` 테이블) — 명예의전당 누적·공유 + 좋아요
 - 배포: Vercel
 - OG 썸네일: `next/og` 로 동적 생성 (카드별 공격 문구가 그대로 썸네일)
@@ -30,14 +30,14 @@ npm run dev                          # http://localhost:3000
    - `hall_of_fame` 테이블 + RLS(익명 select/insert) + `increment_like` RPC + 시드 10건 생성.
 3. Project Settings → API 에서 **Project URL** 과 **anon public key** 복사 → env 에 입력.
 
-### 2) Gemini 키 (무료)
-- https://aistudio.google.com/apikey → Google 계정으로 로그인 → Create API key → `GEMINI_API_KEY` 에 입력. 카드 등록 불필요.
+### 2) Groq 키 (무료)
+- https://console.groq.com → 로그인 → API Keys → Create → `gsk_...` 키를 `GROQ_API_KEY` 에 입력. 무료 티어 1,000건/일, 카드 등록 불필요.
 
 ### 3) Vercel 배포
 1. 이 폴더를 GitHub 레포로 push (또는 `vercel` CLI 로 직접 배포).
 2. Vercel 에서 New Project → 레포 임포트.
 3. **Environment Variables** 에 등록:
-   - `GEMINI_API_KEY` (서버 전용)
+   - `GROQ_API_KEY` (서버 전용)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - (선택) `NEXT_PUBLIC_SITE_URL` = 배포된 프로덕션 URL
@@ -46,7 +46,7 @@ npm run dev                          # http://localhost:3000
 ## 환경 변수
 | 변수 | 용도 | 노출 |
 |---|---|---|
-| `GEMINI_API_KEY` | Gemini 호출 (공격/방어 생성) | 서버 전용 |
+| `GROQ_API_KEY` | Groq 호출 (공격/방어 생성) | 서버 전용 |
 | `NEXT_PUBLIC_SUPABASE_URL` | 명예의전당 DB | 클라 (anon) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 명예의전당 DB (RLS 보호) | 클라 (anon) |
 | `NEXT_PUBLIC_SITE_URL` | OG 썸네일 절대경로 | 클라 |
@@ -60,6 +60,6 @@ app/
   opengraph-image.tsx   기본 OG 썸네일(키비주얼)
   api/possess/route.ts  AI 프록시 (키 은닉)
 components/             HeroDemo · PersonaPicker · InputPanel · AttackDefense · HallCard · Bubbles · MockBanner
-lib/                    personas · seed-content · gemini(서버) · supabase · hall · og
+lib/                    personas · seed-content · groq(서버) · supabase · hall · og
 supabase/schema.sql     DB 스키마 (한 번 실행)
 ```

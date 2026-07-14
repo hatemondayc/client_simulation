@@ -7,7 +7,7 @@
 
 ## 0. 지금 어디까지 됐나 (요약)
 - **앱은 이미 완성**돼 있고 프로덕션 빌드(`next build`)까지 통과함. 4화면 전부 동작.
-- **키(Gemini/Supabase) 없이도 seed 폴백으로 완전히 굴러감** — 랜딩 자동재생, 입력→공격→방어 루프, 명예의전당 피드, 공유 링크, OG 썸네일 다 됨.
+- **키(Groq/Supabase) 없이도 seed 폴백으로 완전히 굴러감** — 랜딩 자동재생, 입력→공격→방어 루프, 명예의전당 피드, 공유 링크, OG 썸네일 다 됨.
 - **집에서 할 일**: ① 코드 가져오기 ② Node 설치 + `npm install` ③ 키 3개 넣기 ④ 로컬 확인 ⑤ Vercel 배포. 끝.
 
 ---
@@ -66,10 +66,10 @@ cp .env.local.example .env.local     # Windows cmd: copy .env.local.example .env
 ```
 그리고 `.env.local`을 열어 값 채움 (아래 4-2, 4-3에서 얻음).
 
-### 4-2. Gemini 키 (AI 공격/방어 생성 · 무료)
-- https://aistudio.google.com/apikey → Google 계정 로그인 → Create API key.
-- `.env.local`의 `GEMINI_API_KEY=...` 에 붙여넣기.
-- 이 키는 **서버(`/api/possess` 라우트)에서만** 쓰이고 브라우저로 안 나감. 모델은 `gemini-3.5-flash`(무료 티어, 카드 등록 불필요).
+### 4-2. Groq 키 (AI 공격/방어 생성 · 무료)
+- https://console.groq.com → 로그인 → API Keys → Create → `gsk_...` 복사.
+- `.env.local`의 `GROQ_API_KEY=...` 에 붙여넣기.
+- 이 키는 **서버(`/api/possess` 라우트)에서만** 쓰이고 브라우저로 안 나감. 모델은 `meta-llama/llama-4-scout`(Groq, 무료 티어 1,000건/일, 카드 불필요, 멀티모달).
 
 ### 4-3. Supabase (명예의전당 DB)
 1. https://supabase.com → New project (무료).
@@ -85,7 +85,7 @@ npm run dev      # http://localhost:3000
 ```
 확인 포인트:
 - `/` 로드 즉시 데모 자동재생.
-- 입력창에 아무 시안 + 페르소나 고르고 "빙의 시작" → **이번엔 seed가 아니라 라이브 Gemini가 생성**(키 정상이면). 실패해도 seed로 안 죽음.
+- 입력창에 아무 시안 + 페르소나 고르고 "빙의 시작" → **이번엔 seed가 아니라 라이브 Groq가 생성**(키 정상이면). 실패해도 seed로 안 죽음.
 - "박제하기" → `/hall`에 실제로 카드가 쌓이는지(= Supabase insert 됨). ♥ 눌러 카운트 증가 확인.
 
 ---
@@ -95,7 +95,7 @@ npm run dev      # http://localhost:3000
 2. **Settings → Environment Variables**에 3개(+선택 1) 등록:
    | 변수 | 값 |
    |---|---|
-   | `GEMINI_API_KEY` | (aistudio.google.com/apikey 발급, 무료) |
+   | `GROQ_API_KEY` | (console.groq.com 발급, gsk_..., 무료) |
    | `NEXT_PUBLIC_SUPABASE_URL` | https://xxxx.supabase.co |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | eyJ... |
    | `NEXT_PUBLIC_SITE_URL` (선택) | 배포된 https URL (OG 썸네일 절대경로용) |
@@ -125,7 +125,7 @@ lib/
   og.ts                    OG용 한글 폰트 로더
 supabase/schema.sql        DB 스키마(한 번 실행)
 ```
-- **공격/방어 톤을 바꾸고 싶다** → `lib/gemini.ts`의 `systemPrompt()` + `INTENSITY_RULES` + `lib/personas.ts`의 `personaPrompt`.
+- **공격/방어 톤을 바꾸고 싶다** → `lib/groq.ts`의 `systemPrompt()` + `INTENSITY_RULES` + `lib/personas.ts`의 `personaPrompt`.
 - **데모/폴백 문구** → `lib/seed-content.ts`.
 - **색/폰트** → `app/globals.css`(라임/잉크/네이비 토큰), 폰트는 `app/layout.tsx`(Noto Sans KR).
 
@@ -133,10 +133,10 @@ supabase/schema.sql        DB 스키마(한 번 실행)
 
 ## 7. 핵심 기술 결정 & 함정 (이어서 작업할 사람 필독)
 - **문서의 "Supabase Edge Function 프록시"는 Next.js API 라우트(`/api/possess`)로 대체함.** 키 숨김 의도는 동일, 배포는 훨씬 단순(승인됨). Supabase는 DB 전용.
-- **모델은 `gemini-3.5-flash`** (Google Gemini, 무료 티어·카드 등록 불필요). 원래 Anthropic Claude로 만들었다가 비용 때문에 Gemini로 교체함. 바꾸려면 `lib/gemini.ts` 상단 `MODEL` + `GEMINI_API_KEY` env.
-- **SDK는 `@google/genai`**(신규 통합 SDK). 호출부는 `client.interactions.create({model, input, system_instruction, response_format})` — `input`은 문자열 또는 `{type:'text'|'image', ...}` 파츠 배열, 구조화 출력은 `response_format:{type:'text', mime_type:'application/json', schema}`로 JSON 스키마 강제, 결과는 `interaction.output_text`(JSON 문자열, 직접 파싱). **이 SDK는 2026년 상반기에 나온 신규 API라 코드 작성 전 반드시 WebFetch로 공식 문서(ai.google.dev/gemini-api/docs) 재확인 — 학습 데이터 기준으로 짐작하면 옛 API(`generateContent`)로 잘못 씀.**
-- **비전(이미지) 입력**: `InteractionInputPart`에 `{type:'image', data:<base64>, mime_type}` 추가. 클라이언트(`components/InputPanel.tsx`)에서 canvas로 긴 변 1600px 다운스케일 후 JPEG base64로 전송, 서버(`/api/possess`)가 data URL 파싱·크기 제한(~3.7MB) 검증.
-- **강도(순한맛/보통/매운맛)**: `lib/gemini.ts`의 `INTENSITY_RULES`로 시스템 프롬프트만 바뀜, 모델은 고정.
+- **모델은 `meta-llama/llama-4-scout-17b-16e-instruct`** (Groq, 무료 1,000건/일·카드 불필요·멀티모달·~2s). AI 엔진 변천사: Anthropic Claude(유료) → Google Gemini(무료지만 하루 20건뿐) → **Groq**(무료 1,000건/일)로 정착. 바꾸려면 `lib/groq.ts` 상단 `MODEL` + `GROQ_API_KEY` env.
+- **SDK 안 씀 — raw fetch로 REST 호출.** Groq는 OpenAI 호환 Chat Completions: `POST https://api.groq.com/openai/v1/chat/completions`, 헤더 `Authorization: Bearer $GROQ_API_KEY`, 바디 `{model, messages:[{role:"system"},{role:"user"}], response_format:{type:"json_object"}, temperature, max_tokens}`. 결과는 `choices[0].message.content`(JSON 문자열, 직접 파싱). **JSON 모드는 프롬프트에 "JSON" 단어가 있어야 함**(현재 있음). (Anthropic·Google SDK 둘 다 이 환경에서 hang/불안정해서 raw fetch가 가장 안정적이었음.)
+- **비전(이미지) 입력**: user content를 배열로 `[{type:'text',text},{type:'image_url',image_url:{url:'data:image/jpeg;base64,...'}}]`(OpenAI 비전 포맷). 클라이언트(`components/InputPanel.tsx`)에서 canvas로 긴 변 1600px 다운스케일 후 JPEG base64로 전송, 서버(`/api/possess`)가 data URL 파싱·크기 제한(~3.7MB) 검증. llama-4-scout가 멀티모달이라 단일 모델로 처리.
+- **강도(순한맛/보통/매운맛)**: `lib/groq.ts`의 `INTENSITY_RULES`로 시스템 프롬프트만 바뀜, 모델은 고정.
 - **OG 썸네일 한글 폰트 함정**: Satori는 woff2를 못 읽음. `lib/og.ts`는 Google Fonts를 **일반(non-browser) UA로 fetch**해 **ttf**를 받아야 함(모던 UA로 요청하면 woff2 와서 깨짐). 필요한 글자만 subset해서 가벼움.
 - **graceful degrade가 설계 핵심**: 키 없거나 API 실패해도 seed 폴백으로 앱이 안 죽음(5초 훅 보장). 함부로 제거하지 말 것.
 - 로컬 검증 팁: `npx tsc --noEmit`로 타입체크(dev는 타입체크 안 함), `next build`로 배포 전 최종 확인.
@@ -146,7 +146,7 @@ supabase/schema.sql        DB 스키마(한 번 실행)
 ## 8. 집에서 Claude Code로 이어서 시키기 (붙여넣기용)
 집 컴퓨터에서 이 폴더를 열고 Claude Code에 이렇게:
 
-> 이 폴더는 이노션 바이브코딩 대회 출품작 "광고주 빙의 시뮬레이터"야. `HANDOFF.md`와 `README.md`를 먼저 읽고 현재 상태를 파악해줘. 그다음 `.env.local`에 내가 줄 Gemini·Supabase 키를 넣고, `npm install` → `npm run dev`로 로컬에서 **라이브 AI 생성과 명예의전당 insert까지** 검증한 뒤, Vercel 배포를 도와줘. Supabase 스키마(`supabase/schema.sql`) 실행과 키 발급은 내가 대시보드에서 직접 할게.
+> 이 폴더는 이노션 바이브코딩 대회 출품작 "광고주 빙의 시뮬레이터"야. `HANDOFF.md`와 `README.md`를 먼저 읽고 현재 상태를 파악해줘. 그다음 `.env.local`에 내가 줄 Groq·Supabase 키를 넣고, `npm install` → `npm run dev`로 로컬에서 **라이브 AI 생성과 명예의전당 insert까지** 검증한 뒤, Vercel 배포를 도와줘. Supabase 스키마(`supabase/schema.sql`) 실행과 키 발급은 내가 대시보드에서 직접 할게.
 
 ---
 
