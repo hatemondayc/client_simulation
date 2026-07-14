@@ -76,6 +76,9 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  /* 한글은 어절(띄어쓰기) 단위로 줄바꿈 → 단어 중간에서 잘리는 어색함 방지 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* 브루탈리스트 하드 섀도우 */

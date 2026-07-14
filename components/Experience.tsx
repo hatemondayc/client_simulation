@@ -137,7 +137,7 @@ export default function Experience() {
           <p className="mb-4 inline-block rounded-full border border-white/12 bg-white/5 px-3 py-1 text-xs font-semibold tracking-wide text-paper/60">
             보고 들어가기 전에, 무슨 말 나올지 미리 맞아보기
           </p>
-          <h1 className="display mx-auto max-w-3xl text-[13vw] leading-[0.95] sm:text-6xl md:text-7xl">
+          <h1 className="display mx-auto max-w-3xl text-[11.5vw] leading-[0.95] sm:text-6xl md:text-7xl">
             AI가 당신 광고주로
             <br />
             <span className="text-lime">빙의</span>합니다.
