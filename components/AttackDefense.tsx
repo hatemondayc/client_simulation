@@ -106,7 +106,11 @@ export default function AttackDefense({
                   </button>
                 </div>
               </div>
-              <DefenseCard text={it.defense} delay={reduce.current ? 0 : 400} />
+              <DefenseCard
+                text={it.defense}
+                delay={reduce.current ? 0 : 400}
+                copyable
+              />
             </Fragment>
           );
         })}
