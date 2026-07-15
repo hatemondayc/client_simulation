@@ -6,6 +6,7 @@ import HeroDemo from "./HeroDemo";
 import InputPanel, { type SourceMode } from "./InputPanel";
 import AttackDefense from "./AttackDefense";
 import PossessLoader from "./PossessLoader";
+import HallTicker from "./HallTicker";
 import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
 import type { PersonaKey } from "@/lib/personas";
@@ -205,6 +206,13 @@ export default function Experience() {
             </span>
           </button>
           <p className="text-xs text-paper/40">5초면 충분</p>
+        </div>
+
+        <div className="mt-14">
+          <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-widest text-paper/35">
+            🏛️ 지금 명예의전당 인기 어록
+          </p>
+          <HallTicker />
         </div>
       </div>
     </section>
