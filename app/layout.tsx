@@ -10,7 +10,13 @@ const noto = Noto_Sans_KR({
   preload: false,
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// OG/트위터 이미지의 절대 URL 기준. Vercel은 VERCEL_PROJECT_PRODUCTION_URL을
+// 자동 주입(프로덕션 도메인, 배포마다 안정적) → 별도 env 설정 없이 공유 미리보기 동작.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
