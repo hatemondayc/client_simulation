@@ -22,18 +22,19 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "광고주 빙의 시뮬레이터",
   description:
-    "AI가 당신 광고주로 빙의해서 시안에 트집을 잡고, 어떻게 받아칠지까지 짜줍니다. 보고 들어가기 전에 한 번 당해보세요.",
+    "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 당신 광고주로 빙의해 소재를 미리 깝니다. 어떻게 대답하면 좋을지 답까지 같이 짜드려요.",
   openGraph: {
     title: "광고주 빙의 시뮬레이터",
     description:
-      "AI가 당신 광고주로 빙의해서 시안에 트집을 잡습니다. \"이거 완전 우리 광고주야ㅋㅋ\"",
+      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재를 미리 깝니다.",
     type: "website",
     locale: "ko_KR",
   },
   twitter: {
     card: "summary_large_image",
     title: "광고주 빙의 시뮬레이터",
-    description: "AI가 당신 광고주로 빙의해서 시안에 트집을 잡습니다.",
+    description:
+      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재를 미리 깝니다.",
   },
 };
 
