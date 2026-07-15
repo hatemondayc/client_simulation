@@ -49,7 +49,7 @@ export function DefenseCard({
       style={animate && delay ? { animationDelay: `${delay}ms` } : undefined}
     >
       <div className="mb-1 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-limedeep">
-        <span aria-hidden>🛡️</span> 이렇게 받아치세요
+        <span aria-hidden>🛡️</span> 이렇게 대답해보세요
       </div>
       <p className="text-[15px] leading-relaxed">{text}</p>
     </div>

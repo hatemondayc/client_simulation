@@ -34,7 +34,7 @@ export default function Home() {
         <p className="mt-4 text-paper/30">
           AI 응답은 Groq · Llama 4 Scout로 생성됩니다
         </p>
-        <p className="mt-1 text-paper/20">
+        <p className="mt-1 select-all text-ink">
           디지털이니셔티브팀 오원기 시니어매니저 제작
         </p>
       </footer>

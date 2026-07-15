@@ -75,7 +75,7 @@ export default function AttackDefense({
           🗣️ 광고주가 이럽니다
         </div>
         <div className="hidden text-xs font-bold uppercase tracking-widest text-paper/40 md:block">
-          🛡️ 이렇게 받아치세요
+          🛡️ 이렇게 대답해보세요
         </div>
 
         {shown.map((it, i) => {
