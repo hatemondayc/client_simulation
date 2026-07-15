@@ -184,7 +184,7 @@ export default function Experience() {
             광고주는 못 바꿔도, 대비는 되니까
           </p>
           <h1 className="display mx-auto max-w-3xl text-[11.5vw] leading-[0.95] sm:text-6xl md:text-7xl">
-            AI가 당신 광고주로
+            AI가 여러분의 광고주로
             <br />
             <span className="text-lime">빙의</span>합니다.
           </h1>

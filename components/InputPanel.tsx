@@ -323,12 +323,9 @@ export default function InputPanel({
         {/* 광고주 말투 입히기 (선택, 접이식) */}
         <details className="group mt-6 rounded-xl border border-white/12 bg-black/20">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-paper/70 [&::-webkit-details-marker]:hidden">
-            <span className="flex items-center gap-2">
+            <span>
               💬 우리 광고주로 빙의하기{" "}
               <span className="font-normal text-paper/40">(선택)</span>
-              <span className="animate-pulse rounded-full bg-lime px-1.5 py-0.5 text-[10px] font-black leading-none text-ink">
-                NEW
-              </span>
             </span>
             <span className="text-paper/40 transition-transform group-open:rotate-180">
               ▾
