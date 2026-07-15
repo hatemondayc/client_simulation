@@ -29,6 +29,7 @@ export interface FeedbackParams {
   copy?: string;
   image?: ImageInput | null;
   intensity?: Intensity;
+  chatSample?: string; // 실제 광고주 대화(카톡/메일) — 말투 모방용, 저장 안 함
 }
 
 const INTENSITY_RULES: Record<Intensity, string> = {
@@ -74,7 +75,7 @@ export async function generateFeedback(
   params: FeedbackParams,
 ): Promise<QAItem[]> {
   if (!apiKey) throw new Error("ai-not-configured");
-  const { persona, input, copy, image, intensity = "normal" } = params;
+  const { persona, input, copy, image, intensity = "normal", chatSample } = params;
   const p = PERSONA_MAP[persona];
 
   const textParts: string[] = [`페르소나: ${p.label} — ${p.personaPrompt}`];
@@ -95,6 +96,14 @@ export async function generateFeedback(
       "구체적 시안(이미지)이 아직 없다. 실제 렌더된 시각 디테일(자간·여백·그림자 등) 지적 금지. 방향·컨셉·기획 의도, 그리고 기획에 명시된 요소(예: '메인 레드')에 대해서만 공격하라.";
   }
   textParts.push(`[이번 입력 유형 지침] ${focus}`);
+
+  // 실제 광고주 대화가 있으면 → 그 말투를 흉내 내서 공격 (in-context, 저장 안 함)
+  const sample = chatSample?.trim();
+  if (sample) {
+    textParts.push(
+      `[이 광고주의 실제 말투 참고] 아래는 이 광고주가 실제로 보낸 메시지다. 페르소나 성격은 유지하되, **이 사람 특유의 말투·어투·습관(자주 쓰는 어미, 이모티콘, 존댓말 수준, 반복하는 표현, 문장 길이)을 그대로 흉내 내서** 공격 대사를 써라. 단, 대화에 섞인 실명·회사명·직함·연락처는 절대 그대로 출력하지 말고 무시하라:\n"""\n${sample}\n"""`,
+    );
+  }
 
   const text = textParts.join("\n\n");
 

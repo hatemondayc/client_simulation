@@ -9,6 +9,7 @@ export interface PossessInput {
   copy?: string;
   image?: string | null; // data URL
   intensity?: Intensity;
+  chatSample?: string; // 광고주 대화 샘플(말투 모방용, 저장 안 함)
 }
 
 export interface PossessResult {
@@ -35,6 +36,7 @@ export async function generatePossession(
         copy: params.copy ?? "",
         image: params.image ?? null,
         intensity: params.intensity ?? "normal",
+        chatSample: params.chatSample ?? "",
       }),
       signal: controller.signal,
     });

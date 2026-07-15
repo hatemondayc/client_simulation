@@ -19,6 +19,7 @@ export default function Experience() {
   const [copy, setCopy] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [intensity, setIntensity] = useState<Intensity>("normal");
+  const [chatSample, setChatSample] = useState("");
   const [persona, setPersona] = useState<PersonaKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<QAItem[]>([]);
@@ -51,6 +52,7 @@ export default function Experience() {
       copy: copy.trim(),
       image,
       intensity,
+      chatSample: chatSample.trim(),
     });
     setItems(result.items);
     setLoading(false);
@@ -89,6 +91,8 @@ export default function Experience() {
           setImage={setImage}
           intensity={intensity}
           setIntensity={setIntensity}
+          chatSample={chatSample}
+          setChatSample={setChatSample}
           persona={persona}
           setPersona={setPersona}
           onSubmit={submit}

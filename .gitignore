@@ -43,3 +43,6 @@ next-env.d.ts
 
 # one-off experiment scripts
 test-*.mjs
+
+# OG 원본(빌드는 app/opengraph-image.png 사용)
+opengraph_ver1.png

@@ -58,6 +58,8 @@ export default function InputPanel({
   setImage,
   intensity,
   setIntensity,
+  chatSample,
+  setChatSample,
   persona,
   setPersona,
   onSubmit,
@@ -71,6 +73,8 @@ export default function InputPanel({
   setImage: (v: string | null) => void;
   intensity: Intensity;
   setIntensity: (v: Intensity) => void;
+  chatSample: string;
+  setChatSample: (v: string) => void;
   persona: PersonaKey | null;
   setPersona: (k: PersonaKey) => void;
   onSubmit: () => void;
@@ -177,6 +181,44 @@ export default function InputPanel({
             {imgBusy ? "이미지 처리 중…" : "📎 이미지 선택 (PNG/JPG)"}
           </button>
         )}
+
+        {/* 광고주 말투 입히기 (선택, 접이식) */}
+        <details className="group mt-6 rounded-xl border border-white/12 bg-black/20">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-paper/70 [&::-webkit-details-marker]:hidden">
+            <span>
+              💬 우리 광고주 말투 입히기{" "}
+              <span className="font-normal text-paper/40">(선택)</span>
+            </span>
+            <span className="text-paper/40 transition-transform group-open:rotate-180">
+              ▾
+            </span>
+          </summary>
+          <div className="border-t border-white/10 px-4 py-3">
+            <p className="mb-2 text-xs text-paper/50">
+              광고주가 보낸 카톡·메일을 붙여넣으면, 그 사람 말투를 흉내 내서
+              공격해요.
+            </p>
+            <textarea
+              value={chatSample}
+              onChange={(e) => setChatSample(e.target.value)}
+              maxLength={1500}
+              rows={4}
+              placeholder={
+                "예)\n김프로 그거 시안 봤는데 색이 좀 촌스럽지 않아요?? ㅎㅎ\n윗분들은 좀 더 고급스러운 느낌 원하시는데~ 이번주까지 될까요?"
+              }
+              className="w-full resize-y rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-paper outline-none placeholder:text-paper/25 focus:border-lime"
+            />
+            <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
+              <span className="text-amber-300/75">
+                ⚠️ 실명·연락처 등 개인정보는 지우고 붙여넣어 주세요. 대화 내용은
+                저장되지 않아요.
+              </span>
+              <span className="shrink-0 text-paper/30">
+                {chatSample.length}/1500
+              </span>
+            </div>
+          </div>
+        </details>
 
         {/* 4. 강도 */}
         <label className="mb-2 mt-6 block text-sm font-bold text-paper/70">

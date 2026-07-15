@@ -38,12 +38,14 @@ export async function POST(req: Request) {
     copy,
     intensity,
     image,
+    chatSample,
   } = (body ?? {}) as {
     persona?: string;
     input?: string;
     copy?: string;
     intensity?: string;
     image?: string;
+    chatSample?: string;
   };
 
   if (!isPersonaKey(persona)) {
@@ -52,6 +54,9 @@ export async function POST(req: Request) {
 
   const cleanInput = typeof input === "string" ? input.trim().slice(0, 200) : "";
   const cleanCopy = typeof copy === "string" ? copy.trim().slice(0, 1000) : "";
+  // 광고주 말투 샘플: 저장하지 않고 프롬프트에만 사용, 1500자 컷
+  const cleanChat =
+    typeof chatSample === "string" ? chatSample.trim().slice(0, 1500) : "";
   const level: Intensity = INTENSITIES.includes(intensity as Intensity)
     ? (intensity as Intensity)
     : "normal";
@@ -80,6 +85,7 @@ export async function POST(req: Request) {
       copy: cleanCopy,
       image: img,
       intensity: level,
+      chatSample: cleanChat,
     });
     return NextResponse.json({ items });
   } catch (e) {
