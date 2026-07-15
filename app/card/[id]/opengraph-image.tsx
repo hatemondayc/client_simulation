@@ -18,7 +18,7 @@ export default async function Image({
   const { id } = await params;
   const card = await fetchCard(id);
   const persona = card ? personaLabel(card.persona) : "우리 광고주";
-  const quote = card?.attack_text ?? "AI가 당신 광고주로 빙의합니다";
+  const quote = card?.attack_text ?? "AI가 여러분의 광고주로 빙의합니다";
 
   const font = await loadKoreanFont(BADGE + persona + quote + FOOTER, 900);
   const quoteSize = quote.length > 40 ? 48 : quote.length > 24 ? 60 : 72;

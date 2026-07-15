@@ -12,11 +12,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!card) {
     return {
       title: "광고주 빙의 시뮬레이터",
-      description: "AI가 당신 광고주로 빙의해서 시안에 트집을 잡습니다.",
+      description: "AI가 여러분의 광고주로 빙의해서 시안에 트집을 잡습니다.",
     };
   }
   const title = `“${card.attack_text}” — ${personaLabel(card.persona)}`;
-  const description = "AI가 당신 광고주로 빙의합니다. 나도 당해보기 →";
+  const description = "AI가 여러분의 광고주로 빙의합니다. 나도 당해보기 →";
   return {
     title,
     description,
