@@ -22,11 +22,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "광고주 빙의 시뮬레이터",
   description:
-    "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 당신 광고주로 빙의해 소재를 미리 깝니다. 어떻게 대답하면 좋을지 답까지 같이 짜드려요.",
+    "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 당신 광고주로 빙의해 소재에 피드백을 쏟아냅니다. 어떻게 대답하면 좋을지 답까지 같이 짜드려요.",
   openGraph: {
     title: "광고주 빙의 시뮬레이터",
     description:
-      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재를 미리 깝니다.",
+      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재에 피드백을 쏟아냅니다.",
     type: "website",
     locale: "ko_KR",
   },
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "광고주 빙의 시뮬레이터",
     description:
-      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재를 미리 깝니다.",
+      "“느낌이 좀 다른데…” 그 말 나오기 전에, AI가 광고주로 빙의해 소재에 피드백을 쏟아냅니다.",
   },
 };
 
