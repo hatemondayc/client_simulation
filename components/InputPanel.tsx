@@ -95,7 +95,7 @@ export default function InputPanel({
   const activeSource =
     sourceMode === "copy" ? copy.trim().length > 0 : !!image;
   const hasContent = input.trim().length > 0 || activeSource;
-  const ready = hasContent && !!persona && !loading;
+  const ready = brand.trim().length > 0 && hasContent && !!persona && !loading;
 
   async function onFile(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
@@ -117,7 +117,7 @@ export default function InputPanel({
         <label className="mb-2 block text-sm font-bold text-paper/70">
           1. 어떤 브랜드예요?{" "}
           <span className="font-normal text-paper/40">
-            (선택 · 업종 느낌만 참고해요)
+            (업종 느낌을 참고해서 공격해요)
           </span>
         </label>
         <input
@@ -246,9 +246,12 @@ export default function InputPanel({
         {/* 광고주 말투 입히기 (선택, 접이식) */}
         <details className="group mt-6 rounded-xl border border-white/12 bg-black/20">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-paper/70 [&::-webkit-details-marker]:hidden">
-            <span>
+            <span className="flex items-center gap-2">
               💬 우리 광고주로 빙의하기{" "}
               <span className="font-normal text-paper/40">(선택)</span>
+              <span className="animate-pulse rounded-full bg-lime px-1.5 py-0.5 text-[10px] font-black leading-none text-ink">
+                NEW
+              </span>
             </span>
             <span className="text-paper/40 transition-transform group-open:rotate-180">
               ▾

@@ -62,7 +62,7 @@ export default function Experience() {
   }
 
   async function submit() {
-    if (!persona || !hasContent || loading) return;
+    if (!persona || !brand.trim() || !hasContent || loading) return;
     setLoading(true);
     const cs = chatSample.trim();
     const useCopy = sourceMode === "copy";
