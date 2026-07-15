@@ -48,6 +48,19 @@ export default function Experience() {
     toTop();
   }
 
+  // #4 재도전: 소재는 그대로, 광고주만 다시 고르게 → 페르소나 섹션으로 스크롤
+  function retryOtherPersona() {
+    setPersona(null);
+    setView("input");
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        document
+          .getElementById("persona-picker")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
+    }
+  }
+
   async function submit() {
     if (!persona || !hasContent || loading) return;
     setLoading(true);
@@ -139,7 +152,7 @@ export default function Experience() {
           input={summaryLabel()}
           usedChatSample={usedChat}
           onEnshrine={handleEnshrine}
-          onRestart={goInput}
+          onRestart={retryOtherPersona}
           onOpenHall={() => router.push("/hall")}
         />
       </section>

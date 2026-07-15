@@ -170,7 +170,7 @@ export default function AttackDefense({
           onClick={onRestart}
           className="w-full rounded-xl border border-white/20 px-6 py-3 font-bold text-paper transition-colors hover:bg-white/10 sm:w-auto"
         >
-          ↺ 다른 시안으로 또 당해보기
+          🔄 같은 소재로 다른 광고주
         </button>
         <button
           type="button"
