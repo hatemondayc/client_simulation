@@ -10,10 +10,37 @@ const DEMO_ITEMS = HERO_SCENARIO.items.slice(0, 3);
 const PERSONA = PERSONA_MAP[HERO_SCENARIO.persona];
 const INPUT = HERO_SCENARIO.input;
 
+const TYPING_MS = 900;
+const HOLD_MS = 2900;
+
+// 광고주 "입력 중…" 말풍선 (톡 느낌)
+function TypingBubble() {
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-lime/60 bg-navy text-lg">
+        {PERSONA.emoji}
+      </div>
+      <div className="relative rounded-2xl rounded-tl-md bg-navy px-4 py-3.5 shadow-lg shadow-black/40">
+        <span className="absolute -left-1.5 top-3 size-3 rotate-45 bg-navy" />
+        <span className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="size-1.5 animate-bounce rounded-full bg-paper/60"
+              style={{ animationDelay: `${i * 150}ms` }}
+            />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function HeroDemo() {
   const [typed, setTyped] = useState(0);
-  const [revealed, setRevealed] = useState(0);
-  const [run, setRun] = useState(0);
+  const [started, setStarted] = useState(false);
+  const [active, setActive] = useState(0);
+  const [phase, setPhase] = useState<"typing" | "reveal">("typing");
   const reduce = useRef(false);
 
   useEffect(() => {
@@ -21,39 +48,47 @@ export default function HeroDemo() {
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     if (reduce.current) {
       setTyped(INPUT.length);
-      setRevealed(DEMO_ITEMS.length);
+      setStarted(true);
+      setPhase("reveal");
     }
   }, []);
 
+  // 좌측 기획 한 줄 타이핑 (1회)
   useEffect(() => {
     if (reduce.current) return;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    setTyped(0);
-    setRevealed(0);
-
     let i = 0;
     const typing = setInterval(() => {
       i += 1;
       setTyped(i);
       if (i >= INPUT.length) clearInterval(typing);
     }, 55);
-
-    const typeDur = INPUT.length * 55 + 400;
-    DEMO_ITEMS.forEach((_, idx) => {
-      timers.push(
-        setTimeout(() => setRevealed(idx + 1), typeDur + idx * 1350),
-      );
-    });
-    const total = typeDur + DEMO_ITEMS.length * 1350 + 3400;
-    timers.push(setTimeout(() => setRun((r) => r + 1), total));
-
+    const startTimer = setTimeout(
+      () => setStarted(true),
+      INPUT.length * 55 + 400,
+    );
     return () => {
       clearInterval(typing);
-      timers.forEach(clearTimeout);
+      clearTimeout(startTimer);
     };
-  }, [run]);
+  }, []);
+
+  // 톡 사이클: 입력중(typing) → 공격·방어 pop(reveal) → 다음 쌍
+  useEffect(() => {
+    if (reduce.current || !started) return;
+    setPhase("typing");
+    const t1 = setTimeout(() => setPhase("reveal"), TYPING_MS);
+    const t2 = setTimeout(
+      () => setActive((a) => (a + 1) % DEMO_ITEMS.length),
+      TYPING_MS + HOLD_MS,
+    );
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [started, active]);
 
   const typingDone = typed >= INPUT.length;
+  const it = DEMO_ITEMS[active];
 
   return (
     <div className="rounded-3xl border border-white/10 bg-ash/40 p-3 shadow-2xl shadow-black/50 sm:p-4">
@@ -86,7 +121,7 @@ export default function HeroDemo() {
           </div>
         </div>
 
-        {/* 우: 빙의 스트림 */}
+        {/* 우: 빙의 스트림 — 톡처럼 한 쌍씩, 박스 높이는 사이저로 고정 */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-paper/50">
             <span className="relative flex size-2">
@@ -96,19 +131,50 @@ export default function HeroDemo() {
             광고주 빙의 중
           </div>
 
-          <div className="flex flex-col gap-3">
-            {revealed === 0 && (
-              <div className="text-sm text-paper/40">
-                시안을 째려보는 중…
+          {!started ? (
+            <div className="text-sm text-paper/40">시안을 째려보는 중…</div>
+          ) : (
+            <>
+              <div className="relative">
+                {/* 사이저: 3쌍 겹쳐 렌더(안 보임) → 컨테이너 높이를 최대 쌍에 고정 */}
+                <div className="invisible grid" aria-hidden>
+                  {DEMO_ITEMS.map((p, i) => (
+                    <div
+                      key={i}
+                      className="col-start-1 row-start-1 flex flex-col gap-2"
+                    >
+                      <AttackBubble text={p.attack} persona={PERSONA.key} animate={false} />
+                      <DefenseCard text={p.defense} animate={false} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* 실제 표시: 현재 쌍만, 입력중 → pop */}
+                <div className="absolute inset-0 flex flex-col gap-2">
+                  {phase === "typing" ? (
+                    <TypingBubble />
+                  ) : (
+                    <>
+                      <AttackBubble text={it.attack} persona={PERSONA.key} />
+                      <DefenseCard text={it.defense} delay={reduce.current ? 0 : 450} />
+                    </>
+                  )}
+                </div>
               </div>
-            )}
-            {DEMO_ITEMS.slice(0, revealed).map((it, i) => (
-              <div key={`${run}-${i}`} className="flex flex-col gap-2">
-                <AttackBubble text={it.attack} persona={PERSONA.key} />
-                <DefenseCard text={it.defense} delay={500} />
+
+              {/* 진행 도트 */}
+              <div className="flex items-center gap-1.5">
+                {DEMO_ITEMS.map((_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === active ? "w-4 bg-lime" : "w-1.5 bg-white/25"
+                    }`}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

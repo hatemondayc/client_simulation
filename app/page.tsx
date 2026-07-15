@@ -27,11 +27,11 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-white/8 px-4 py-8 text-center text-xs text-paper/35">
-        <p className="mx-auto max-w-xl">
-          AE·제작·PM·미디어 다 겪는 그 순간, 보고 들어가기 전에 광고주한테
-          미리 한번 당해보는 툴이에요. 나오는 광고주는 전부 가상 인물입니다.
+        <p className="text-sm font-bold text-paper/75">
+          광고주는 못 바꿔도, 대비는 되잖아요.
         </p>
-        <p className="mt-3 text-paper/30">
+        <p className="mt-1.5">나오는 광고주는 전부 가상 인물입니다.</p>
+        <p className="mt-4 text-paper/30">
           AI 응답은 Groq · Llama 4 Scout로 생성됩니다
         </p>
         <p className="mt-1 text-paper/20">

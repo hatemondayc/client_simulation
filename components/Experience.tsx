@@ -135,7 +135,7 @@ export default function Experience() {
       <div className="relative mx-auto max-w-5xl">
         <div className="mb-8 text-center">
           <p className="mb-4 inline-block rounded-full border border-white/12 bg-white/5 px-3 py-1 text-xs font-semibold tracking-wide text-paper/60">
-            보고 들어가기 전에, 무슨 말 나올지 미리 맞아보기
+            광고주는 못 바꿔도, 대비는 되니까
           </p>
           <h1 className="display mx-auto max-w-3xl text-[11.5vw] leading-[0.95] sm:text-6xl md:text-7xl">
             AI가 당신 광고주로
@@ -143,8 +143,8 @@ export default function Experience() {
             <span className="text-lime">빙의</span>합니다.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base text-paper/60 sm:text-lg">
-            시안 하나 넣어보세요. 광고주가 빙의해서 실컷 트집을 잡고, 그
-            트집 어떻게 받아칠지까지 같이 짜드립니다.
+            시안이나 카피를 넣어보고, 광고주에게 미리 매를 맞아보세요. 그리고
+            어떻게 대답하면 좋을지까지 시뮬레이션해보세요.
           </p>
         </div>
 
