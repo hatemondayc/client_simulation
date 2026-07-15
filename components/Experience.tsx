@@ -7,6 +7,7 @@ import InputPanel, { type SourceMode } from "./InputPanel";
 import AttackDefense from "./AttackDefense";
 import PossessLoader from "./PossessLoader";
 import HallTicker from "./HallTicker";
+import VotePrompt from "./VotePrompt";
 import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
 import type { PersonaKey } from "@/lib/personas";
@@ -161,6 +162,7 @@ export default function Experience() {
           onRestart={retryOtherPersona}
           onOpenHall={() => router.push("/hall")}
         />
+        <VotePrompt active />
       </section>
     );
   }
