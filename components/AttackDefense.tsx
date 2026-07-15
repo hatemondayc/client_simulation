@@ -18,14 +18,19 @@ export default function AttackDefense({
   items: QAItem[];
   persona: PersonaKey;
   input: string;
-  /** 박제 실행 — 성공 시 true 반환 */
-  onEnshrine: (item: QAItem, index: number) => Promise<boolean>;
+  /** 박제 실행 — 성공 시 { ok, url(카드 공유 링크) } 반환 */
+  onEnshrine: (
+    item: QAItem,
+    index: number,
+  ) => Promise<{ ok: boolean; url: string | null }>;
   onRestart: () => void;
   onOpenHall: () => void;
 }) {
   const p = PERSONA_MAP[persona];
   const [revealed, setRevealed] = useState(0);
   const [states, setStates] = useState<Record<number, EnshrineState>>({});
+  const [urls, setUrls] = useState<Record<number, string | null>>({});
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const reduce = useRef(false);
 
   useEffect(() => {
@@ -46,10 +51,32 @@ export default function AttackDefense({
     if (states[index] === "saving" || states[index] === "done") return;
     setStates((s) => ({ ...s, [index]: "saving" }));
     try {
-      const ok = await onEnshrine(item, index);
-      setStates((s) => ({ ...s, [index]: ok ? "done" : "error" }));
+      const res = await onEnshrine(item, index);
+      setStates((s) => ({ ...s, [index]: res.ok ? "done" : "error" }));
+      if (res.ok) setUrls((u) => ({ ...u, [index]: res.url }));
     } catch {
       setStates((s) => ({ ...s, [index]: "error" }));
+    }
+  }
+
+  async function shareCard(index: number) {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const url = urls[index] ?? origin;
+    const text = `이거 완전 우리 광고주야ㅋㅋ “${items[index].attack}”`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "광고주 빙의 시뮬레이터", text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopiedIdx(index);
+        setTimeout(
+          () => setCopiedIdx((c) => (c === index ? null : c)),
+          1600,
+        );
+      }
+    } catch {
+      /* 사용자가 공유 취소 등 — 무시 */
     }
   }
 
@@ -84,7 +111,7 @@ export default function AttackDefense({
             <Fragment key={i}>
               <div className="flex flex-col gap-2">
                 <AttackBubble text={it.attack} persona={persona} />
-                <div className="pl-[46px]">
+                <div className="flex flex-wrap items-center gap-2 pl-[46px]">
                   <button
                     type="button"
                     onClick={() => enshrine(it, i)}
@@ -99,11 +126,20 @@ export default function AttackDefense({
                       <span className="size-3 animate-spin rounded-full border-2 border-paper/30 border-t-lime" />
                     )}
                     {st === "done"
-                      ? "🏛️ 명예의전당에 박제 완료 ✓"
+                      ? "🏛️ 박제 완료 ✓"
                       : st === "error"
                         ? "⚠️ 앗, 다시 눌러주세요"
                         : "🏛️ 이 말 박제하기"}
                   </button>
+                  {st === "done" && (
+                    <button
+                      type="button"
+                      onClick={() => shareCard(i)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-lime/50 bg-lime/10 px-3 py-1 text-xs font-bold text-lime transition-colors hover:bg-lime/20 active:scale-95"
+                    >
+                      {copiedIdx === i ? "링크 복사됨 ✓" : "📤 동료한테 자랑하기"}
+                    </button>
+                  )}
                 </div>
               </div>
               <DefenseCard

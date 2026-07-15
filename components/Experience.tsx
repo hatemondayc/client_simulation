@@ -60,17 +60,23 @@ export default function Experience() {
     toTop();
   }
 
-  async function handleEnshrine(item: QAItem): Promise<boolean> {
-    if (!persona) return false;
+  async function handleEnshrine(
+    item: QAItem,
+  ): Promise<{ ok: boolean; url: string | null }> {
+    if (!persona) return { ok: false, url: null };
     try {
-      await enshrineAttack({
+      const row = await enshrineAttack({
         persona,
         attack_text: item.attack,
         input_summary: summaryLabel(),
       });
-      return true;
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+      // Supabase 미설정(row=null)이면 카드가 없으니 사이트 루트로 폴백
+      const url = row ? `${origin}/card/${row.id}` : origin || null;
+      return { ok: true, url };
     } catch {
-      return false;
+      return { ok: false, url: null };
     }
   }
 
