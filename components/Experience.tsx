@@ -161,7 +161,7 @@ export default function Experience() {
             onClick={goInput}
             className="group flex items-center gap-2 rounded-2xl bg-lime px-8 py-4 text-xl font-black text-ink shadow-xl transition-all hover:brightness-95 active:translate-y-0.5"
           >
-            내 시안으로 당해보기
+            내 소재 넣어보기
             <span className="transition-transform group-hover:translate-x-1">
               →
             </span>

@@ -186,7 +186,7 @@ export default function InputPanel({
         <details className="group mt-6 rounded-xl border border-white/12 bg-black/20">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-bold text-paper/70 [&::-webkit-details-marker]:hidden">
             <span>
-              💬 우리 광고주 말투 입히기{" "}
+              💬 우리 광고주로 빙의하기{" "}
               <span className="font-normal text-paper/40">(선택)</span>
             </span>
             <span className="text-paper/40 transition-transform group-open:rotate-180">
@@ -195,8 +195,8 @@ export default function InputPanel({
           </summary>
           <div className="border-t border-white/10 px-4 py-3">
             <p className="mb-2 text-xs text-paper/50">
-              광고주가 보낸 카톡·메일을 붙여넣으면, 그 사람 말투를 흉내 내서
-              공격해요.
+              광고주와 주고받은 카톡·메일을 넣으면, 그 말투를 학습해서
+              피드백해드려요.
             </p>
             <textarea
               value={chatSample}
