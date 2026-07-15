@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import HeroDemo from "./HeroDemo";
 import InputPanel, { type SourceMode } from "./InputPanel";
 import AttackDefense from "./AttackDefense";
+import PossessLoader from "./PossessLoader";
 import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
 import type { PersonaKey } from "@/lib/personas";
@@ -105,7 +106,9 @@ export default function Experience() {
 
   if (view === "input") {
     return (
-      <section className="px-4 py-10 sm:py-16">
+      <>
+        {loading && <PossessLoader persona={persona} />}
+        <section className="px-4 py-10 sm:py-16">
         <div className="mx-auto mb-8 max-w-2xl text-center">
           <h2 className="display text-3xl sm:text-4xl">
             내 시안, <span className="text-lime">누구한테</span> 당해볼까?
@@ -139,7 +142,8 @@ export default function Experience() {
             ← 처음으로
           </button>
         </div>
-      </section>
+        </section>
+      </>
     );
   }
 

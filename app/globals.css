@@ -64,6 +64,15 @@
     transform: translateX(-50%);
   }
 }
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -113,6 +122,9 @@ body {
 .floaty {
   animation: floaty 4s ease-in-out infinite;
 }
+.animate-breathe {
+  animation: breathe 1.4s ease-in-out infinite;
+}
 
 /* 헤드라인: 브루탈리스트 타이트 트래킹 */
 .display {
@@ -139,6 +151,7 @@ body {
   .animate-pop,
   .animate-fadeup,
   .floaty,
+  .animate-breathe,
   .caret::after {
     animation: none !important;
   }
