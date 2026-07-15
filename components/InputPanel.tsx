@@ -19,6 +19,50 @@ const LEVELS: { key: Intensity; label: string; emoji: string; desc: string }[] =
   { key: "spicy", label: "매운맛", emoji: "🌶️", desc: "집요하게" },
 ];
 
+// 입력 귀찮은 사람용 원클릭 샘플. 카테고리별 가상 브랜드 + 시안 + 카피 + 페르소나 4종 배분.
+type Sample = {
+  cat: string;
+  emoji: string;
+  brand: string;
+  input: string;
+  copy: string;
+  persona: PersonaKey;
+};
+const SAMPLES: Sample[] = [
+  {
+    cat: "자동차",
+    emoji: "🚗",
+    brand: "다온모터스",
+    input: "신형 전기 SUV 런칭 키비주얼",
+    copy: "메인카피: 조용히, 그러나 확실하게\n서브: 1회 충전 540km, 도심을 다시 쓰다",
+    persona: "boss",
+  },
+  {
+    cat: "F&B",
+    emoji: "☕",
+    brand: "그리너리",
+    input: "여름 신메뉴 음료 인스타 런칭",
+    copy: "메인카피: 한 모금, 초록 한 스푼\n서브: 이번 여름만, 제철 그린 시리즈",
+    persona: "vibe",
+  },
+  {
+    cat: "리빙",
+    emoji: "🛋️",
+    brand: "무드홈",
+    input: "봄 시즌 가구 컬렉션 카탈로그 표지",
+    copy: "메인카피: 오늘의 무드를 삽니다\n서브: 2026 S/S 리빙 컬렉션",
+    persona: "reference",
+  },
+  {
+    cat: "앱서비스",
+    emoji: "📱",
+    brand: "핀버디",
+    input: "자산관리 앱 온보딩 화면 리뉴얼",
+    copy: "메인카피: 돈 관리, 이제 친구처럼\n서브: 3분이면 끝나는 자산 연결",
+    persona: "detail",
+  },
+];
+
 export type SourceMode = "copy" | "image";
 
 // 브라우저에서 이미지를 긴 변 기준 축소 + jpeg 인코딩 → 전송 용량·비전 비용 절감
@@ -97,6 +141,20 @@ export default function InputPanel({
   const hasContent = input.trim().length > 0 || activeSource;
   const ready = brand.trim().length > 0 && hasContent && !!persona && !loading;
 
+  function fillSample(s: Sample) {
+    setBrand(s.brand);
+    setInput(s.input);
+    setCopy(s.copy);
+    setSourceMode("copy");
+    setImage(null);
+    setPersona(s.persona);
+    setTimeout(() => {
+      document
+        .getElementById("possess-start")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 60);
+  }
+
   async function onFile(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) return;
     setImgBusy(true);
@@ -113,6 +171,25 @@ export default function InputPanel({
   return (
     <div className="mx-auto w-full max-w-2xl">
       <div className="rounded-3xl border border-white/10 bg-ash/40 p-5 shadow-2xl shadow-black/50 sm:p-7">
+        {/* 원클릭 샘플 — 입력 없이 바로 체험 */}
+        <div className="mb-6 rounded-2xl border border-lime/25 bg-lime/[0.06] p-3">
+          <p className="mb-2 text-xs font-bold text-lime">
+            ⚡ 바쁘면? 샘플로 바로 돌려보기
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {SAMPLES.map((s) => (
+              <button
+                key={s.cat}
+                type="button"
+                onClick={() => fillSample(s)}
+                className="rounded-full border border-lime/30 bg-white/5 px-3 py-1 text-xs font-bold text-paper/80 transition-colors hover:border-lime hover:text-lime"
+              >
+                {s.emoji} {s.cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 1. 브랜드 */}
         <label className="mb-2 block text-sm font-bold text-paper/70">
           1. 어떤 브랜드예요?{" "}
@@ -322,10 +399,11 @@ export default function InputPanel({
         <PersonaPicker value={persona} onChange={setPersona} />
 
         <button
+          id="possess-start"
           type="button"
           onClick={onSubmit}
           disabled={!ready}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-6 py-4 text-lg font-black text-ink transition-all hover:brightness-95 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-6 flex w-full scroll-mt-24 items-center justify-center gap-2 rounded-xl bg-lime px-6 py-4 text-lg font-black text-ink transition-all hover:brightness-95 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
