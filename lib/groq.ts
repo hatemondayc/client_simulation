@@ -25,6 +25,7 @@ export interface ImageInput {
 
 export interface FeedbackParams {
   persona: PersonaKey;
+  brand?: string; // 사용자 브랜드/업종 — 맥락용(대사엔 실명 미출력)
   input?: string;
   copy?: string;
   image?: ImageInput | null;
@@ -75,10 +76,16 @@ export async function generateFeedback(
   params: FeedbackParams,
 ): Promise<QAItem[]> {
   if (!apiKey) throw new Error("ai-not-configured");
-  const { persona, input, copy, image, intensity = "normal", chatSample } = params;
+  const { persona, brand, input, copy, image, intensity = "normal", chatSample } =
+    params;
   const p = PERSONA_MAP[persona];
 
   const textParts: string[] = [`페르소나: ${p.label} — ${p.personaPrompt}`];
+  if (brand?.trim()) {
+    textParts.push(
+      `브랜드/업종 맥락(참고용): ${brand.trim()} — 이 브랜드·업종의 특성과 톤을 공격에 반영하라. 단 공격 대사에는 이 브랜드명(및 다른 실존 브랜드명)을 그대로 쓰지 말고 "이 브랜드"·"이 제품"처럼 지칭하라.`,
+    );
+  }
   if (input) textParts.push(`시안/기획 한 줄: ${input}`);
   if (copy) textParts.push(`실제 광고 카피:\n${copy}`);
   if (image) textParts.push("시안 이미지가 첨부됨(아래 지침 참고).");

@@ -34,6 +34,7 @@ export async function POST(req: Request) {
 
   const {
     persona,
+    brand,
     input,
     copy,
     intensity,
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
     chatSample,
   } = (body ?? {}) as {
     persona?: string;
+    brand?: string;
     input?: string;
     copy?: string;
     intensity?: string;
@@ -52,6 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid-persona" }, { status: 400 });
   }
 
+  const cleanBrand = typeof brand === "string" ? brand.trim().slice(0, 40) : "";
   const cleanInput = typeof input === "string" ? input.trim().slice(0, 200) : "";
   const cleanCopy = typeof copy === "string" ? copy.trim().slice(0, 1000) : "";
   // 광고주 말투 샘플: 저장하지 않고 프롬프트에만 사용, 1500자 컷
@@ -81,6 +84,7 @@ export async function POST(req: Request) {
   try {
     const items = await generateFeedback({
       persona,
+      brand: cleanBrand,
       input: cleanInput,
       copy: cleanCopy,
       image: img,

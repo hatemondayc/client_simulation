@@ -5,6 +5,7 @@ export type Intensity = "mild" | "normal" | "spicy";
 
 export interface PossessInput {
   persona: PersonaKey;
+  brand?: string;
   input?: string;
   copy?: string;
   image?: string | null; // data URL
@@ -32,6 +33,7 @@ export async function generatePossession(
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         persona: params.persona,
+        brand: params.brand ?? "",
         input: params.input ?? "",
         copy: params.copy ?? "",
         image: params.image ?? null,

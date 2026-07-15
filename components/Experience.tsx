@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import HeroDemo from "./HeroDemo";
-import InputPanel from "./InputPanel";
+import InputPanel, { type SourceMode } from "./InputPanel";
 import AttackDefense from "./AttackDefense";
 import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
@@ -15,9 +15,11 @@ type View = "landing" | "input" | "result";
 export default function Experience() {
   const router = useRouter();
   const [view, setView] = useState<View>("landing");
+  const [brand, setBrand] = useState("");
   const [input, setInput] = useState("");
   const [copy, setCopy] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [sourceMode, setSourceMode] = useState<SourceMode>("copy");
   const [intensity, setIntensity] = useState<Intensity>("normal");
   const [chatSample, setChatSample] = useState("");
   const [persona, setPersona] = useState<PersonaKey | null>(null);
@@ -25,13 +27,15 @@ export default function Experience() {
   const [items, setItems] = useState<QAItem[]>([]);
   const [usedChat, setUsedChat] = useState(false);
 
-  const hasContent = input.trim().length > 0 || copy.trim().length > 0 || !!image;
+  const activeSource =
+    sourceMode === "copy" ? copy.trim().length > 0 : !!image;
+  const hasContent = input.trim().length > 0 || activeSource;
 
   function summaryLabel(): string {
     return (
       input.trim() ||
-      copy.trim().slice(0, 60) ||
-      (image ? "이미지 시안" : "내 시안")
+      (sourceMode === "copy" ? copy.trim().slice(0, 60) : image ? "이미지 시안" : "") ||
+      "내 시안"
     );
   }
 
@@ -48,11 +52,13 @@ export default function Experience() {
     if (!persona || !hasContent || loading) return;
     setLoading(true);
     const cs = chatSample.trim();
+    const useCopy = sourceMode === "copy";
     const result = await generatePossession({
       persona,
+      brand: brand.trim(),
       input: input.trim(),
-      copy: copy.trim(),
-      image,
+      copy: useCopy ? copy.trim() : "",
+      image: useCopy ? null : image,
       intensity,
       chatSample: cs,
     });
@@ -93,12 +99,16 @@ export default function Experience() {
           </h2>
         </div>
         <InputPanel
+          brand={brand}
+          setBrand={setBrand}
           input={input}
           setInput={setInput}
           copy={copy}
           setCopy={setCopy}
           image={image}
           setImage={setImage}
+          sourceMode={sourceMode}
+          setSourceMode={setSourceMode}
           intensity={intensity}
           setIntensity={setIntensity}
           chatSample={chatSample}
