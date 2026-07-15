@@ -155,6 +155,7 @@ export default function Experience() {
           items={items}
           persona={persona!}
           input={summaryLabel()}
+          intensity={intensity}
           usedChatSample={usedChat}
           onEnshrine={handleEnshrine}
           onRestart={retryOtherPersona}

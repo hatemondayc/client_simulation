@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { AttackBubble, DefenseCard } from "./Bubbles";
 import { PERSONA_MAP, type PersonaKey } from "@/lib/personas";
 import type { QAItem } from "@/lib/seed-content";
+import type { Intensity } from "@/lib/possess-client";
 
 type EnshrineState = "idle" | "saving" | "done" | "error";
 
@@ -11,6 +12,7 @@ export default function AttackDefense({
   items,
   persona,
   input,
+  intensity = "normal",
   usedChatSample = false,
   onEnshrine,
   onRestart,
@@ -19,6 +21,7 @@ export default function AttackDefense({
   items: QAItem[];
   persona: PersonaKey;
   input: string;
+  intensity?: Intensity;
   /** 실제 광고주 말투(chatSample)가 이 결과에 반영됐는지 */
   usedChatSample?: boolean;
   /** 박제 실행 — 성공 시 { ok, url(카드 공유 링크) } 반환 */
@@ -121,7 +124,11 @@ export default function AttackDefense({
           return (
             <Fragment key={i}>
               <div className="flex flex-col gap-2">
-                <AttackBubble text={it.attack} persona={persona} />
+                <AttackBubble
+                  text={it.attack}
+                  persona={persona}
+                  spicy={intensity === "spicy"}
+                />
                 <div className="flex flex-wrap items-center gap-2 pl-[46px]">
                   <button
                     type="button"

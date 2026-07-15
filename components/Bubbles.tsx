@@ -6,22 +6,23 @@ export function AttackBubble({
   text,
   persona,
   animate = true,
+  spicy = false,
   className = "",
 }: {
   text: string;
   persona: string;
   animate?: boolean;
+  spicy?: boolean;
   className?: string;
 }) {
+  const anim = animate ? (spicy ? "attack-spicy" : "animate-pop") : "";
   return (
     <div className={`flex items-start gap-2.5 ${className}`}>
       <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full border border-lime/60 bg-navy text-lg">
         {personaEmoji(persona)}
       </div>
       <div
-        className={`relative max-w-[88%] rounded-2xl rounded-tl-md bg-navy px-4 py-3 text-[15px] leading-relaxed text-paper shadow-lg shadow-black/40 ${
-          animate ? "animate-pop" : ""
-        }`}
+        className={`relative max-w-[88%] rounded-2xl rounded-tl-md bg-navy px-4 py-3 text-[15px] leading-relaxed text-paper shadow-lg shadow-black/40 ${anim}`}
       >
         <span className="absolute -left-1.5 top-3 size-3 rotate-45 bg-navy" />
         {text}
