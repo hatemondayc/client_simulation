@@ -11,6 +11,7 @@ export default function AttackDefense({
   items,
   persona,
   input,
+  usedChatSample = false,
   onEnshrine,
   onRestart,
   onOpenHall,
@@ -18,6 +19,8 @@ export default function AttackDefense({
   items: QAItem[];
   persona: PersonaKey;
   input: string;
+  /** 실제 광고주 말투(chatSample)가 이 결과에 반영됐는지 */
+  usedChatSample?: boolean;
   /** 박제 실행 — 성공 시 { ok, url(카드 공유 링크) } 반환 */
   onEnshrine: (
     item: QAItem,
@@ -95,6 +98,14 @@ export default function AttackDefense({
         </span>
         <span className="text-paper/40">보고 빙의했어요</span>
       </div>
+
+      {usedChatSample && (
+        <div className="mb-6 -mt-3 flex justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-lime/40 bg-lime/10 px-3 py-1 text-xs font-bold text-lime">
+            💬 우리 광고주 말투 적용됨
+          </span>
+        </div>
+      )}
 
       {/* 공격/방어 그리드 */}
       <div className="grid gap-x-6 gap-y-6 md:grid-cols-2">

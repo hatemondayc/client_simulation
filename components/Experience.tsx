@@ -23,6 +23,7 @@ export default function Experience() {
   const [persona, setPersona] = useState<PersonaKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<QAItem[]>([]);
+  const [usedChat, setUsedChat] = useState(false);
 
   const hasContent = input.trim().length > 0 || copy.trim().length > 0 || !!image;
 
@@ -46,15 +47,18 @@ export default function Experience() {
   async function submit() {
     if (!persona || !hasContent || loading) return;
     setLoading(true);
+    const cs = chatSample.trim();
     const result = await generatePossession({
       persona,
       input: input.trim(),
       copy: copy.trim(),
       image,
       intensity,
-      chatSample: chatSample.trim(),
+      chatSample: cs,
     });
     setItems(result.items);
+    // 말투 샘플을 넣었고 실제 AI가 생성했을 때만(폴백이면 말투 미반영) 배지 ON
+    setUsedChat(cs.length > 0 && result.source === "ai");
     setLoading(false);
     setView("result");
     toTop();
@@ -123,6 +127,7 @@ export default function Experience() {
           items={items}
           persona={persona!}
           input={summaryLabel()}
+          usedChatSample={usedChat}
           onEnshrine={handleEnshrine}
           onRestart={goInput}
           onOpenHall={() => router.push("/hall")}
