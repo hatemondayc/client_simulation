@@ -11,7 +11,7 @@ import { isPersonaKey } from "@/lib/personas";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const INTENSITIES: Intensity[] = ["mild", "normal", "spicy"];
+const INTENSITIES: Intensity[] = ["mild", "normal", "spicy", "savage"];
 // data:image/(png|jpeg|webp|gif);base64,<data>
 const DATA_URL_RE = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/;
 const MAX_IMAGE_B64 = 5_000_000; // ~3.7MB 원본 (Vercel 4.5MB 본문 한도 대비 여유)

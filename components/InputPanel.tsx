@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PersonaPicker from "./PersonaPicker";
 import type { PersonaKey } from "@/lib/personas";
 import type { Intensity } from "@/lib/possess-client";
+import { isSavageUnlocked, seenCount } from "@/lib/dex";
 
 const EXAMPLES = [
   "여름 세일 배너 (메인 레드)",
@@ -136,6 +137,12 @@ export default function InputPanel({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [imgBusy, setImgBusy] = useState(false);
+  const [savageOn, setSavageOn] = useState(false);
+  const [dex, setDex] = useState(0);
+  useEffect(() => {
+    setSavageOn(isSavageUnlocked());
+    setDex(seenCount());
+  }, []);
   const activeSource =
     sourceMode === "copy" ? copy.trim().length > 0 : !!image;
   const hasContent = input.trim().length > 0 || activeSource;
@@ -385,6 +392,34 @@ export default function InputPanel({
             );
           })}
         </div>
+
+        {/* 히든 4번째 티어 — 광고주 도감 완성 시 해금 */}
+        {savageOn ? (
+          <button
+            type="button"
+            onClick={() => setIntensity("savage")}
+            className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 transition-all ${
+              intensity === "savage"
+                ? "border-red-500 bg-red-500/15 text-red-300 ring-2 ring-red-500/70"
+                : "border-red-500/40 bg-red-500/5 text-red-300/90 hover:border-red-500/70"
+            }`}
+          >
+            <span className="text-lg">😤</span>
+            <span className="text-sm font-extrabold">개싸가지</span>
+            <span className="text-[10px] text-red-300/60">반말 · 선 넘는 갑질</span>
+          </button>
+        ) : (
+          <div
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/12 bg-black/20 py-2.5 text-paper/35"
+            title="광고주 4종을 모두 만나면 해금됩니다"
+          >
+            <span className="text-lg">🔒</span>
+            <span className="text-sm font-extrabold">???</span>
+            <span className="text-[10px] text-paper/30">
+              광고주 4종을 모두 만나면 해금 ({dex}/4)
+            </span>
+          </div>
+        )}
 
         {/* 5. 페르소나 */}
         <label

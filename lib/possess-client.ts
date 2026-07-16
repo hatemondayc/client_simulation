@@ -1,7 +1,7 @@
 import { fallbackFor, type QAItem } from "./seed-content";
 import type { PersonaKey } from "./personas";
 
-export type Intensity = "mild" | "normal" | "spicy";
+export type Intensity = "mild" | "normal" | "spicy" | "savage";
 
 export interface PossessInput {
   persona: PersonaKey;

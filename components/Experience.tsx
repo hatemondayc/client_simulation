@@ -10,6 +10,7 @@ import HallTicker from "./HallTicker";
 import VotePrompt from "./VotePrompt";
 import { generatePossession, type Intensity } from "@/lib/possess-client";
 import { enshrineAttack } from "@/lib/hall";
+import { recordPersona } from "@/lib/dex";
 import type { PersonaKey } from "@/lib/personas";
 import type { QAItem } from "@/lib/seed-content";
 
@@ -29,6 +30,7 @@ export default function Experience() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<QAItem[]>([]);
   const [usedChat, setUsedChat] = useState(false);
+  const [savageUnlock, setSavageUnlock] = useState(false);
 
   const activeSource =
     sourceMode === "copy" ? copy.trim().length > 0 : !!image;
@@ -81,6 +83,8 @@ export default function Experience() {
     setItems(result.items);
     // 말투 샘플을 넣었고 실제 AI가 생성했을 때만(폴백이면 말투 미반영) 배지 ON
     setUsedChat(cs.length > 0 && result.source === "ai");
+    // 광고주 도감 기록 — 4종 완성 순간 개싸가지 모드 해금 각성
+    if (recordPersona(persona).justUnlocked) setSavageUnlock(true);
     setLoading(false);
     setView("result");
     toTop();
@@ -163,6 +167,26 @@ export default function Experience() {
           onOpenHall={() => router.push("/hall")}
         />
         <VotePrompt active />
+        {savageUnlock && (
+          <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md animate-fadeup rounded-2xl border border-red-500/50 bg-ash/95 p-4 shadow-2xl shadow-black/60 backdrop-blur sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2">
+            <button
+              type="button"
+              onClick={() => setSavageUnlock(false)}
+              aria-label="닫기"
+              className="absolute right-2.5 top-2.5 text-paper/40 transition-colors hover:text-paper"
+            >
+              ✕
+            </button>
+            <p className="pr-5 text-sm font-black text-red-300">
+              🔓 개싸가지 모드 해금!
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-paper/70">
+              광고주 4종을 모두 겪으셨습니다. 다음 빙의부터 강도 맨 아래에서
+              <b className="text-red-300"> 😤 개싸가지</b>를 고를 수 있어요 — 반말로
+              꺼들먹대는 최종 보스.
+            </p>
+          </div>
+        )}
       </section>
     );
   }
