@@ -120,6 +120,13 @@ export async function generateFeedback(
     );
   }
 
+  // 개싸가지 모드: 페르소나별 [말투] 규칙을 요청 끝에서 한 번 더 강제 무효화(특히 순한 유형)
+  if (intensity === "savage") {
+    textParts.push(
+      `[개싸가지 모드 · 최우선 지시] 위 페르소나 정의의 [말투] 규칙(존댓말만·반말 금지 등)은 이번엔 전부 무효다. ${p.label}도 예외 없이 전부 반말로 하대·비아냥한다. '느낌만있는형'처럼 원래 순한 유형도 짜증 섞인 반말로 몰아붙여라. 존댓말 어미(~요·~죠·~까요·~습니다·~네요) 절대 금지, 전부 반말 종결(~어·~야·~냐·~지·~거든).`,
+    );
+  }
+
   const text = textParts.join("\n\n");
 
   const userContent: UserContent = image
